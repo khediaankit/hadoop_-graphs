@@ -1,0 +1,10 @@
+bigrams = LOAD 's3://cse6242-2016fall-bigrams-big/*' AS (bigram:chararray, year:int,count:int,books:int);
+filtered = FILTER bigrams by count>=50;
+split_bigrams = GROUP filtered BY bigram;
+results = FOREACH split_bigrams GENERATE group as sample1,SUM(filtered.count)as occurence,SUM(filtered.books) as book_count;
+final_aggregates = FOREACH results GENERATE sample1, (float)occurence/book_count as aver_occ;
+ordered = order final_aggregates by aver_occ DESC;
+firstten = limit ordered 10;
+STORE firstten INTO 's3://cse6242-akhedia3/ouput7/output-big.txt' using PigStorage('\t');
+
+
